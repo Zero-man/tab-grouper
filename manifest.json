@@ -1,0 +1,30 @@
+{
+
+    "manifest_version": 2,
+    "name": "Tab Grouper",
+    "version": "0.1.0",
+    "description": "Consolidate your tabs into a list.",
+    "homepage_url": "https://github.com/Zero-man/tab-grouper",
+    "icons": {
+        "48": "icons/fish-48.png"
+    },
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "commands": {
+        "group-tabs": {
+            "suggested_key": {
+                "default": "Alt+Shift+G"
+            }
+        }
+    },
+    "permissions": [
+        "tabs"
+    ],
+    "browser_action": {
+        "browser_style": true,
+        "default_icon": "icons/fish-32.png",
+        "default_title": "TabGrouper",
+        "default_popup": "popup/popup.html"
+    }
+}
