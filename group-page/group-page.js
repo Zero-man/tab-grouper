@@ -91,11 +91,13 @@
     }
     
     function closeGroupOnClick (index, element, event) {
-        getBackgroundPage.then(page => {
-            page.removeGroupFromTabsStore(index);
-            tabGroupContainer.removeChild(element);
-        }, error => {
-            console.log(`Error: ${error}`);
-        })
+        if (confirm("Are you sure you want to remove this tab group?")) {
+            getBackgroundPage.then(page => {
+                page.removeGroupFromTabsStore(index);
+                tabGroupContainer.removeChild(element);
+            }, error => {
+                console.log(`Error: ${error}`);
+            });
+        }
     }
 })();
