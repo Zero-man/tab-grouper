@@ -52,8 +52,13 @@ function onUpdatedHandler (tabId, changeInfo, tab) {
     }
 }
 
-function removeGroupFromTabsStore (index) {
+function removeTabGroup (index) {
     tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1);
+}
+
+function removeTabGroupItem (index, parentIndex) {
+    let group = tabsStore[parentIndex].tabs;
+    group.length === 1 ? group.pop() : group.splice(index, 1);
 }
 
 function onlyGroupTab (tabs) { 

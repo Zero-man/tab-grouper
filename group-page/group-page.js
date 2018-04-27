@@ -26,11 +26,13 @@
 
     function renderHeaderText (index, element) {
         let tabHeaderContainer = document.createElement('div');
-        let tabHeader = document.createElement('h3');
-        let closeButton = renderCloseTabButton(index, element);
-
         tabHeaderContainer.className = 'header-container';
+        
+        let tabHeader = document.createElement('h3');
         tabHeader.appendChild(document.createTextNode(`Group ${index+1}`));
+        
+        let closeButton = renderCloseGroupButton(index, element);
+
         tabHeaderContainer.appendChild(tabHeader);
         tabHeaderContainer.appendChild(closeButton);
         
@@ -49,26 +51,37 @@
         let tabList = document.createElement('ul');
         tabList.className = 'target-list';
         
-        for (let tab of tabs) {
-            let listItem = renderListItem(tab);
+        tabs.forEach((tab, index) => {
+            let listItem = renderListItem(tab, index, tabList);
             tabList.appendChild(listItem);
-        }
+        });
         
         return tabList;
     }
     
-    function renderCloseTabButton (index, element) {
+    function renderCloseGroupButton (index, element) {
         let button = document.createElement('a');
         button.className = 'close';
         button.onclick = closeGroupOnClick.bind(null, index, element);
 
         return button;
     }
+
+    function renderCloseGroupItemButton (index, parentElement, element) {
+        let button = document.createElement('a');
+        button.className = 'close-mini';
+        button.style.visibility = 'hidden';
+        button.onclick = closeGroupItemOnClick.bind(null, index, parentElement, element);
+
+        return button;
+    }
     
-    function renderListItem (tab) {
+    function renderListItem (tab, tabIndex, parentElement) {
         let targetContainer = document.createElement('div');
         targetContainer.className = 'target-container';
         
+        let closeButton = renderCloseGroupItemButton(tabIndex, parentElement, targetContainer);
+
         let targetIcon = document.createElement('img');
         targetIcon.className = 'target-icon';
         targetIcon.role = 'presentation';
@@ -82,10 +95,19 @@
         targetLink.href = tab.url;
         targetLink.setAttribute('target', '_blank');
         
+        targetContainer.appendChild(closeButton);
         targetContainer.appendChild(targetIcon);
         targetContainer.appendChild(targetName);
         targetName.appendChild(targetLink);
         targetLink.appendChild(document.createTextNode(tab.title));
+
+        targetContainer.addEventListener('mouseenter', event => {
+            closeButton.style.visibility = 'visible';
+        });
+
+        targetContainer.addEventListener('mouseleave', event => {
+            closeButton.style.visibility = 'hidden';
+        });
         
         return targetContainer;
     }
@@ -93,11 +115,29 @@
     function closeGroupOnClick (index, element, event) {
         if (confirm("Are you sure you want to remove this tab group?")) {
             getBackgroundPage.then(page => {
-                page.removeGroupFromTabsStore(index);
+                page.removeTabGroup(index);
                 tabGroupContainer.removeChild(element);
             }, error => {
                 console.log(`Error: ${error}`);
             });
         }
+    }
+
+    function closeGroupItemOnClick (index, parentElement, element, event) {
+        let parentIndex = getNodeIndex(parentElement.parentElement) - 1;
+        getBackgroundPage.then(page => {
+            page.removeTabGroupItem(index, parentIndex);
+            parentElement.removeChild(element);
+            if (parentElement.childElementCount === 0) {
+                page.removeTabGroup(parentIndex);
+                tabGroupContainer.removeChild(parentElement.parentNode);
+            }
+        }, error => {
+            console.log(`Error: ${error}`);
+        });
+    }
+
+    function getNodeIndex (element) {
+        return [...element.parentNode.childNodes].indexOf(element);
     }
 })();
