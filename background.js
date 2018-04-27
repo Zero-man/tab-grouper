@@ -1,6 +1,5 @@
 let tabsStore = [];
 let groupTabId;
-let lastUpdate;
 
 function createTab (data) {    
     if (data.length > 1 && !onlyGroupTab(data)) {
