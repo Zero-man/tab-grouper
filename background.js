@@ -1,6 +1,11 @@
 let tabsStore = [];
 let groupTabId;
 
+if (localStorage.getItem('tabsStore')) {
+    tabsStore = JSON.parse(localStorage.getItem('tabsStore'));
+    console.log(tabsStore);
+}
+
 function createTab (data) {
     if (data.length > 1 && !onlyGroupTab(data)) {
         let tabs = {
@@ -22,14 +27,21 @@ function closeTabs (tab) {
     browser.tabs.remove(tabIds);
 
     lastGroup.tabs = uniq(lastGroup.tabs);
+    localStorage.setItem('tabsStore', JSON.stringify(tabsStore));
 }
 
 function executeCommand () {
-    let query = browser.tabs.query({
-        currentWindow: true
-    });
-
-    query.then(createTab).catch(onError);
+    // Close group tabs across windows.
+    let groupTabs = browser.tabs.query({
+        url: 'moz-extension://*/group-page/group-page.html'
+    }).then(tabs => {
+        let tabIds = tabs.map(tab => tab.id);
+        browser.tabs.remove(tabIds);
+        let query = browser.tabs.query({
+            currentWindow: true
+        });
+        return query;
+    }).then(createTab).catch(onError);
 }
 
 function onCommandHandler (command) {
@@ -56,6 +68,7 @@ function onUpdatedHandler (tabId, changeInfo, tab) {
 
 function removeTabGroup (index) {
     tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1);
+    localStorage.setItem('tabsStore', JSON.stringify(tabsStore));
 }
 
 function restoreTabGroup (index) {
@@ -70,6 +83,7 @@ function restoreTabGroup (index) {
 function removeTabGroupItem (index, parentIndex) {
     let group = tabsStore[parentIndex].tabs;
     group.length === 1 ? group.pop() : group.splice(index, 1);
+    localStorage.setItem('tabsStore', JSON.stringify(tabsStore));
 }
 
 function onlyGroupTab (tabs) { 
