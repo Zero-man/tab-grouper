@@ -1,7 +1,7 @@
 let tabsStore = [];
 let groupTabId;
 
-function createTab (data) {    
+function createTab (data) {
     if (data.length > 1 && !onlyGroupTab(data)) {
         let tabs = {
             tabs: data,
@@ -20,6 +20,8 @@ function closeTabs (tab) {
     let lastGroup = tabsStore[tabsStore.length-1];
     let tabIds = lastGroup.tabs.map(tab => tab.id);
     browser.tabs.remove(tabIds);
+
+    lastGroup.tabs = uniq(lastGroup.tabs);
 }
 
 function executeCommand () {
@@ -67,6 +69,13 @@ function onlyGroupTab (tabs) {
 
 function onError (error) {
     console.log(`Error: ${error}`);
+}
+
+function uniq(a) {
+    var hashtable = {};
+    return a.filter(function(item) {
+        return hashtable[item.url] ? false : (hashtable[item.url] = true);
+    });
 }
 
 browser.commands.onCommand.addListener(onCommandHandler);    
