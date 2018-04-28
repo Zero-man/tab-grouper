@@ -1,10 +1,6 @@
 let tabsStore = [];
 let groupTabId;
 
-if (localStorage.getItem('tabsStore')) {
-    tabsStore = JSON.parse(localStorage.getItem('tabsStore'));
-}
-
 function createTab (data) {
     if (data.length > 1 && !onlyGroupTab(data)) {
         let tabs = {
@@ -26,7 +22,6 @@ function closeTabs (tab) {
     browser.tabs.remove(tabIds);
 
     lastGroup.tabs = uniq(lastGroup.tabs);
-    localStorage.setItem('tabsStore', JSON.stringify(tabsStore));
 }
 
 function executeCommand () {
@@ -67,7 +62,6 @@ function onUpdatedHandler (tabId, changeInfo, tab) {
 
 function removeTabGroup (index) {
     tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1);
-    localStorage.setItem('tabsStore', JSON.stringify(tabsStore));
 }
 
 function restoreTabGroup (index) {
@@ -82,7 +76,6 @@ function restoreTabGroup (index) {
 function removeTabGroupItem (index, parentIndex) {
     let group = tabsStore[parentIndex].tabs;
     group.length === 1 ? group.pop() : group.splice(index, 1);
-    localStorage.setItem('tabsStore', JSON.stringify(tabsStore));
 }
 
 function onlyGroupTab (tabs) { 
