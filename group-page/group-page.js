@@ -7,6 +7,10 @@
             let tabGroupElement = renderTabGroup(tabs, index);
             tabGroupContainer.appendChild(tabGroupElement);
         });
+
+        if (tabGroupContainer.childElementCount === 0) {
+            tabGroupContainer.appendChild(document.createTextNode(`There are no tab groups to display!`))
+        }
     });
 
     function renderTabGroup (tabs, index) {
@@ -28,12 +32,14 @@
         let tabHeaderContainer = document.createElement('div');
         tabHeaderContainer.className = 'header-container';
         
-        let tabHeader = document.createElement('h3');
+        let tabHeader = document.createElement('h2');
         tabHeader.appendChild(document.createTextNode(`Group ${index+1}`));
-        
+    
+        let restoreButton = renderRestoreGroupButton(element);
         let closeButton = renderCloseGroupButton(element);
 
         tabHeaderContainer.appendChild(tabHeader);
+        tabHeaderContainer.appendChild(restoreButton);
         tabHeaderContainer.appendChild(closeButton);
         
         return tabHeaderContainer;
@@ -58,10 +64,22 @@
         
         return tabList;
     }
+
+    function renderRestoreGroupButton (element) {
+        let button = document.createElement('a');
+        button.style.fontWeight = '700';
+        button.style.cursor = 'pointer';
+        button.text = 'Restore';
+        button.title = 'Restore tab group';
+        button.onclick = restoreGroupOnClick.bind(null, element);
+
+        return button;
+    }
     
     function renderCloseGroupButton (element) {
         let button = document.createElement('a');
         button.className = 'close';
+        button.title = 'Remove tab group';
         button.onclick = closeGroupOnClick.bind(null, element);
 
         return button;
@@ -115,9 +133,9 @@
     function closeGroupOnClick (element, event) {
         if (confirm("Are you sure you want to remove this tab group?")) {
             getBackgroundPage.then(page => {
-                let index = getNodeIndex(element)  - 1;
+                let index = getNodeIndex(element) - 1;
                 page.removeTabGroup(index);
-                tabGroupContainer.removeChild(element);
+                removeElement(element);
             }, error => {
                 console.log(`Error: ${error}`);
             });
@@ -132,14 +150,33 @@
             parentElement.removeChild(element);
             if (parentElement.childElementCount === 0) {
                 page.removeTabGroup(parentIndex);
-                tabGroupContainer.removeChild(parentElement.parentNode);
+                removeElement(parentElement.parentNode);
             }
         }, error => {
             console.log(`Error: ${error}`);
         });
     }
 
+    function restoreGroupOnClick (element, event) {
+        getBackgroundPage.then(page => {
+            let index = getNodeIndex(element)  - 1;
+            page.restoreTabGroup(index);
+            page.removeTabGroup(index);
+            removeElement(element);
+        }, error => {
+            console.log(`Error: ${error}`);
+        });
+    }
+
+    function removeElement (element) {
+        tabGroupContainer.removeChild(element);
+        if (tabGroupContainer.childElementCount === 0) {
+            tabGroupContainer.appendChild(document.createTextNode(`There are no tab groups to display!`))
+        }
+    }
+
     function getNodeIndex (element) {
         return [...element.parentNode.childNodes].indexOf(element);
     }
+
 })();
