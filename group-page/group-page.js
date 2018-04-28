@@ -31,7 +31,7 @@
         let tabHeader = document.createElement('h3');
         tabHeader.appendChild(document.createTextNode(`Group ${index+1}`));
         
-        let closeButton = renderCloseGroupButton(index, element);
+        let closeButton = renderCloseGroupButton(element);
 
         tabHeaderContainer.appendChild(tabHeader);
         tabHeaderContainer.appendChild(closeButton);
@@ -51,36 +51,36 @@
         let tabList = document.createElement('ul');
         tabList.className = 'target-list';
         
-        tabs.forEach((tab, index) => {
-            let listItem = renderListItem(tab, index, tabList);
+        tabs.forEach(tab => {
+            let listItem = renderListItem(tab, tabList);
             tabList.appendChild(listItem);
         });
         
         return tabList;
     }
     
-    function renderCloseGroupButton (index, element) {
+    function renderCloseGroupButton (element) {
         let button = document.createElement('a');
         button.className = 'close';
-        button.onclick = closeGroupOnClick.bind(null, index, element);
+        button.onclick = closeGroupOnClick.bind(null, element);
 
         return button;
     }
 
-    function renderCloseGroupItemButton (index, parentElement, element) {
+    function renderCloseGroupItemButton (parentElement, element) {
         let button = document.createElement('a');
         button.className = 'close-mini';
         button.style.visibility = 'hidden';
-        button.onclick = closeGroupItemOnClick.bind(null, index, parentElement, element);
+        button.onclick = closeGroupItemOnClick.bind(null, parentElement, element);
 
         return button;
     }
     
-    function renderListItem (tab, tabIndex, parentElement) {
+    function renderListItem (tab, parentElement) {
         let targetContainer = document.createElement('div');
         targetContainer.className = 'target-container';
         
-        let closeButton = renderCloseGroupItemButton(tabIndex, parentElement, targetContainer);
+        let closeButton = renderCloseGroupItemButton(parentElement, targetContainer);
 
         let targetIcon = document.createElement('img');
         targetIcon.className = 'target-icon';
@@ -112,9 +112,10 @@
         return targetContainer;
     }
     
-    function closeGroupOnClick (index, element, event) {
+    function closeGroupOnClick (element, event) {
         if (confirm("Are you sure you want to remove this tab group?")) {
             getBackgroundPage.then(page => {
+                let index = getNodeIndex(element)  - 1;
                 page.removeTabGroup(index);
                 tabGroupContainer.removeChild(element);
             }, error => {
@@ -123,7 +124,8 @@
         }
     }
 
-    function closeGroupItemOnClick (index, parentElement, element, event) {
+    function closeGroupItemOnClick (parentElement, element, event) {
+        let index = getNodeIndex(element);
         let parentIndex = getNodeIndex(parentElement.parentElement) - 1;
         getBackgroundPage.then(page => {
             page.removeTabGroupItem(index, parentIndex);
