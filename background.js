@@ -58,6 +58,15 @@ function removeTabGroup (index) {
     tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1);
 }
 
+function restoreTabGroup (index) {
+    tabsStore[index].tabs.forEach(tab => {
+        browser.tabs.create({
+            url: tab.url,
+            active: false
+        });
+    });
+}
+
 function removeTabGroupItem (index, parentIndex) {
     let group = tabsStore[parentIndex].tabs;
     group.length === 1 ? group.pop() : group.splice(index, 1);
