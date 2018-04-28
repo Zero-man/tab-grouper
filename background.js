@@ -25,11 +25,17 @@ function closeTabs (tab) {
 }
 
 function executeCommand () {
-    let query = browser.tabs.query({
-        currentWindow: true
-    });
-
-    query.then(createTab).catch(onError);
+    // Close group tabs across windows.
+    let groupTabs = browser.tabs.query({
+        url: 'moz-extension://*/group-page/group-page.html'
+    }).then(tabs => {
+        let tabIds = tabs.map(tab => tab.id);
+        browser.tabs.remove(tabIds);
+        let query = browser.tabs.query({
+            currentWindow: true
+        });
+        return query;
+    }).then(createTab).catch(onError);
 }
 
 function onCommandHandler (command) {
