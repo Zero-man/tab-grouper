@@ -40,30 +40,56 @@
 }
 
 .close {
-    width: 32px;
-    height: 32px;
+    width: 25px;
+    height: 25px;
     opacity: 0.5;
     cursor: pointer;
     text-align: center;
 }
-.close:hover {
+
+.close-mini {
+    width: 15px;
+    height: 15px;
+    padding: 5px 5px 0 0;
+    cursor: pointer;
+    text-align: center;
+    opacity: 0.4;
+}
+
+.close:hover,
+.close-mini:hover {
     opacity: 1;
 }
-.close:before, .close:after {
+
+.close:before, .close:after,
+.close-mini:before, .close-mini:after {
     position: absolute;
     content: ' ';
-    height: 33px;
+    height: 25px;
     width: 4px;
     background-color: #ff0400;
 }
-.close:before {
+
+.close-mini:before, .close-mini:after {
+    height: 15px;
+}
+
+.close:before,
+.close-mini:before {
     transform: rotate(45deg);
 }
-.close:after {
+
+.close:after,
+.close-mini:after {
     transform: rotate(-45deg);
 }
 
 .header-container {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+.header-container h2 {
+    flex: .9 1 auto;
 }

@@ -7,6 +7,10 @@
             let tabGroupElement = renderTabGroup(tabs, index);
             tabGroupContainer.appendChild(tabGroupElement);
         });
+
+        if (tabGroupContainer.childElementCount === 0) {
+            tabGroupContainer.appendChild(document.createTextNode(`There are no tab groups to display!`))
+        }
     });
 
     function renderTabGroup (tabs, index) {
@@ -26,12 +30,16 @@
 
     function renderHeaderText (index, element) {
         let tabHeaderContainer = document.createElement('div');
-        let tabHeader = document.createElement('h3');
-        let closeButton = renderCloseTabButton(index, element);
-
         tabHeaderContainer.className = 'header-container';
+        
+        let tabHeader = document.createElement('h2');
         tabHeader.appendChild(document.createTextNode(`Group ${index+1}`));
+    
+        let restoreButton = renderRestoreGroupButton(element);
+        let closeButton = renderCloseGroupButton(element);
+
         tabHeaderContainer.appendChild(tabHeader);
+        tabHeaderContainer.appendChild(restoreButton);
         tabHeaderContainer.appendChild(closeButton);
         
         return tabHeaderContainer;
@@ -49,26 +57,49 @@
         let tabList = document.createElement('ul');
         tabList.className = 'target-list';
         
-        for (let tab of tabs) {
-            let listItem = renderListItem(tab);
+        tabs.forEach(tab => {
+            let listItem = renderListItem(tab, tabList);
             tabList.appendChild(listItem);
-        }
+        });
         
         return tabList;
     }
-    
-    function renderCloseTabButton (index, element) {
+
+    function renderRestoreGroupButton (element) {
         let button = document.createElement('a');
-        button.className = 'close';
-        button.onclick = closeGroupOnClick.bind(null, index, element);
+        button.style.fontWeight = '700';
+        button.style.cursor = 'pointer';
+        button.text = 'Restore';
+        button.title = 'Restore tab group';
+        button.onclick = restoreGroupOnClick.bind(null, element);
 
         return button;
     }
     
-    function renderListItem (tab) {
+    function renderCloseGroupButton (element) {
+        let button = document.createElement('a');
+        button.className = 'close';
+        button.title = 'Remove tab group';
+        button.onclick = closeGroupOnClick.bind(null, element);
+
+        return button;
+    }
+
+    function renderCloseGroupItemButton (parentElement, element) {
+        let button = document.createElement('a');
+        button.className = 'close-mini';
+        button.style.visibility = 'hidden';
+        button.onclick = closeGroupItemOnClick.bind(null, parentElement, element);
+
+        return button;
+    }
+    
+    function renderListItem (tab, parentElement) {
         let targetContainer = document.createElement('div');
         targetContainer.className = 'target-container';
         
+        let closeButton = renderCloseGroupItemButton(parentElement, targetContainer);
+
         let targetIcon = document.createElement('img');
         targetIcon.className = 'target-icon';
         targetIcon.role = 'presentation';
@@ -82,20 +113,70 @@
         targetLink.href = tab.url;
         targetLink.setAttribute('target', '_blank');
         
+        targetContainer.appendChild(closeButton);
         targetContainer.appendChild(targetIcon);
         targetContainer.appendChild(targetName);
         targetName.appendChild(targetLink);
         targetLink.appendChild(document.createTextNode(tab.title));
+
+        targetContainer.addEventListener('mouseenter', event => {
+            closeButton.style.visibility = 'visible';
+        });
+
+        targetContainer.addEventListener('mouseleave', event => {
+            closeButton.style.visibility = 'hidden';
+        });
         
         return targetContainer;
     }
     
-    function closeGroupOnClick (index, element, event) {
+    function closeGroupOnClick (element, event) {
+        if (confirm("Are you sure you want to remove this tab group?")) {
+            getBackgroundPage.then(page => {
+                let index = getNodeIndex(element) - 1;
+                page.removeTabGroup(index);
+                removeElement(element);
+            }, error => {
+                console.log(`Error: ${error}`);
+            });
+        }
+    }
+
+    function closeGroupItemOnClick (parentElement, element, event) {
+        let index = getNodeIndex(element);
+        let parentIndex = getNodeIndex(parentElement.parentElement) - 1;
         getBackgroundPage.then(page => {
-            page.removeGroupFromTabsStore(index);
-            tabGroupContainer.removeChild(element);
+            page.removeTabGroupItem(index, parentIndex);
+            parentElement.removeChild(element);
+            if (parentElement.childElementCount === 0) {
+                page.removeTabGroup(parentIndex);
+                removeElement(parentElement.parentNode);
+            }
         }, error => {
             console.log(`Error: ${error}`);
-        })
+        });
     }
+
+    function restoreGroupOnClick (element, event) {
+        getBackgroundPage.then(page => {
+            let index = getNodeIndex(element)  - 1;
+            page.restoreTabGroup(index);
+            page.removeTabGroup(index);
+            removeElement(element);
+        }, error => {
+            console.log(`Error: ${error}`);
+        });
+    }
+
+    function removeElement (element) {
+        tabGroupContainer.removeChild(element);
+        if (tabGroupContainer.childElementCount === 0) {
+            tabGroupContainer.appendChild(document.createTextNode(`There are no tab groups to display!`))
+        }
+    }
+
+    function getNodeIndex (element) {
+        return [...element.parentNode.childNodes].indexOf(element);
+    }
+
 })();
