@@ -1,6 +1,12 @@
 let tabsStore = [];
 let groupTabId;
 
+function executeCommand () {
+    let query = browser.tabs.query({
+        currentWindow: true
+    }).then(createTab).catch(onError);
+}
+
 function createTab (data) {
     if (data.length > 1 && !onlyGroupTab(data)) {
         let tabs = {
@@ -19,24 +25,18 @@ function closeTabs (tab) {
     groupTabId = tab.id;
     let lastGroup = tabsStore[tabsStore.length-1];
     let tabIds = lastGroup.tabs.map(tab => tab.id);
+    
     browser.tabs.remove(tabIds);
-
     lastGroup.tabs = uniq(lastGroup.tabs);
-}
 
-function executeCommand () {
-    // Close group tabs across windows.
+    // Close any group tabs across windows.
     let groupTabs = browser.tabs.query({
         url: 'moz-extension://*/group-page/group-page.html'
     }).then(tabs => {
-        let tabIds = tabs.map(tab => tab.id);
-        browser.tabs.remove(tabIds);
-        let query = browser.tabs.query({
-            currentWindow: true
-        });
-        return query;
-    }).then(createTab).catch(onError);
+        browser.tabs.remove(tabs.map(tab => tab.id));
+    })
 }
+
 
 function onCommandHandler (command) {
     if (command === 'group-tabs') {
