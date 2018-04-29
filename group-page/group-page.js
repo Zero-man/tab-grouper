@@ -112,6 +112,7 @@
         let targetLink = document.createElement('a');
         targetLink.href = tab.url;
         targetLink.setAttribute('target', '_blank');
+        targetLink.onclick = closeGroupItemOnClick.bind(null, parentElement, targetContainer);
         
         targetContainer.appendChild(closeButton);
         targetContainer.appendChild(targetIcon);
