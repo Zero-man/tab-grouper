@@ -3,7 +3,6 @@ let groupTabId;
 
 if (localStorage.getItem('tabsStore')) {
     tabsStore = JSON.parse(localStorage.getItem('tabsStore'));
-    console.log(tabsStore);
 }
 
 function createTab (data) {
