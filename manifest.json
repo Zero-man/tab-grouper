@@ -2,11 +2,12 @@
 
     "manifest_version": 2,
     "name": "Tab Grouper",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Consolidate your tabs into a list.",
     "homepage_url": "https://github.com/Zero-man/tab-grouper",
     "icons": {
-        "48": "icons/fish-48.png"
+        "48": "icons/fish-48.png",
+        "64": "icons/fish-64.png"
     },
     "background": {
         "scripts": ["background.js"]
