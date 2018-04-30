@@ -1,7 +1,7 @@
 let tabsStore = []
 let groupTabId
 
-function executeQuery () {
+let executeQuery = () => {
     let query = browser.tabs.query({
         currentWindow: true
     }).then(createTab).catch(onError)
@@ -34,6 +34,34 @@ let closeTabs = (tab) => {
     }).then(tabs => browser.tabs.remove(tabs.map(tab => tab.id)))
 }
 
+let removeTabGroup = (index) => {
+    tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1)
+}
+
+let restoreTabGroup = (index) => {
+    tabsStore[index].tabs.forEach(tab => {
+        browser.tabs.create({
+            url: tab.url,
+            active: false
+        })
+    })
+}
+
+let removeTabGroupItem = (index, parentIndex) => {
+    let group = tabsStore[parentIndex].tabs;
+    group.length === 1 ? group.pop() : group.splice(index, 1);
+}
+
+let onlyGroupTab = (tabs) => tabs.length === 1 && tabs[0].title === "Grouped Tabs"
+
+let onError = (error) => console.log(`Error: ${error}`)
+
+let uniq = (a) => {
+    var hashtable = {}
+    return a.filter(function(item) {
+        return hashtable[item.url] ? false : (hashtable[item.url] = true)
+    })
+}
 
 let onCommandHandler = (command) => {
     if (command === 'group-tabs') {
@@ -70,35 +98,6 @@ let messageHandler = (request, sender, sendResponse) => {
     if (request.func === 'restoreTabGroup') {
         restoreTabGroup(request.args.index)
     }
-}
-
-function removeTabGroup (index) {
-    tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1)
-}
-
-function restoreTabGroup (index) {
-    tabsStore[index].tabs.forEach(tab => {
-        browser.tabs.create({
-            url: tab.url,
-            active: false
-        })
-    })
-}
-
-function removeTabGroupItem (index, parentIndex) {
-    let group = tabsStore[parentIndex].tabs;
-    group.length === 1 ? group.pop() : group.splice(index, 1);
-}
-
-let onlyGroupTab = (tabs) => tabs.length === 1 && tabs[0].title === "Grouped Tabs"
-
-let onError = (error) => console.log(`Error: ${error}`)
-
-function uniq(a) {
-    var hashtable = {}
-    return a.filter(function(item) {
-        return hashtable[item.url] ? false : (hashtable[item.url] = true)
-    })
 }
 
 browser.commands.onCommand.addListener(onCommandHandler)    
