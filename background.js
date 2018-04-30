@@ -1,67 +1,79 @@
-let tabsStore = [];
-let groupTabId;
+let tabsStore = []
+let groupTabId
 
-function executeCommand () {
+function executeQuery () {
     let query = browser.tabs.query({
         currentWindow: true
-    }).then(createTab).catch(onError);
+    }).then(createTab).catch(onError)
 }
 
-function createTab (data) {
+let createTab = (data) => {
     if (data.length > 1 && !onlyGroupTab(data)) {
-        let tabs = {
+        tabsStore.push({
             tabs: data,
             lastUpdate: new Date()
-        };        
-        tabsStore.push(tabs);
+        })
         browser.tabs.create({
             url: '/group-page/group-page.html',
             active: false
-        }).then(closeTabs).catch(onError);
+        }).then(closeTabs).catch(onError)
     }
 }
 
-function closeTabs (tab) {
-    groupTabId = tab.id;
-    let lastGroup = tabsStore[tabsStore.length-1];
-    let tabIds = lastGroup.tabs.map(tab => tab.id);
+let closeTabs = (tab) => {
+    groupTabId = tab.id
+    let lastGroup = tabsStore[tabsStore.length-1]
+    let tabIds = lastGroup.tabs.map(tab => tab.id)
     
-    browser.tabs.remove(tabIds);
-    lastGroup.tabs = uniq(lastGroup.tabs);
+    browser.tabs.remove(tabIds)
+    lastGroup.tabs = uniq(lastGroup.tabs)
 
     // Close any group tabs across windows.
     let groupTabs = browser.tabs.query({
         url: 'moz-extension://*/group-page/group-page.html'
-    }).then(tabs => {
-        browser.tabs.remove(tabs.map(tab => tab.id));
-    })
+    }).then(tabs => browser.tabs.remove(tabs.map(tab => tab.id)))
 }
 
 
-function onCommandHandler (command) {
+let onCommandHandler = (command) => {
     if (command === 'group-tabs') {
-        executeCommand();
+        executeQuery()
     }
 }
 
-function onUpdatedHandler (tabId, changeInfo, tab) {
+let onUpdatedHandler = (tabId, changeInfo, tab) => {
     if (tabId === groupTabId && changeInfo.status === 'complete') {
-        let obj = tabsStore;
+        let obj = tabsStore
 
         for (let item of obj) {
             item.tabs = item.tabs.filter(t => 
                 !/about:|moz-extension:\/\//g.test(t.url)
-            );
+            )
         }
 
         browser.tabs.sendMessage(tabId, {
             tabs: obj,
-        });
+        })
+    }
+}
+
+let messageHandler = (request, sender, sendResponse) => {
+    if (request.func === 'executeQuery') {
+        executeQuery()
+    }
+    if (request.func === 'removeTabGroup') {
+        removeTabGroup(request.args.index)
+    }
+    if (request.func === 'removeTabGroupItem') {
+        removeTabGroupItem(request.args.index, request.args.parentIndex)
+    }
+    if (request.func === 'restoreTabGroup') {
+        restoreTabGroup(request.args.index)
     }
 }
 
 function removeTabGroup (index) {
-    tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1);
+    tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1)
 }
 
 function restoreTabGroup (index) {
@@ -69,8 +81,8 @@ function restoreTabGroup (index) {
         browser.tabs.create({
             url: tab.url,
             active: false
-        });
-    });
+        })
+    })
 }
 
 function removeTabGroupItem (index, parentIndex) {
@@ -78,20 +90,17 @@ function removeTabGroupItem (index, parentIndex) {
     group.length === 1 ? group.pop() : group.splice(index, 1);
 }
 
-function onlyGroupTab (tabs) { 
-    return tabs.length === 1 && tabs[0].title === "Grouped Tabs";
-}
+let onlyGroupTab = (tabs) => tabs.length === 1 && tabs[0].title === "Grouped Tabs"
 
-function onError (error) {
-    console.log(`Error: ${error}`);
-}
+let onError = (error) => console.log(`Error: ${error}`)
 
 function uniq(a) {
-    var hashtable = {};
+    var hashtable = {}
     return a.filter(function(item) {
-        return hashtable[item.url] ? false : (hashtable[item.url] = true);
-    });
+        return hashtable[item.url] ? false : (hashtable[item.url] = true)
+    })
 }
 
-browser.commands.onCommand.addListener(onCommandHandler);    
-browser.tabs.onUpdated.addListener(onUpdatedHandler);
+browser.commands.onCommand.addListener(onCommandHandler)    
+browser.tabs.onUpdated.addListener(onUpdatedHandler)
+browser.runtime.onMessage.addListener(messageHandler);
