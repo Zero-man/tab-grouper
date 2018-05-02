@@ -100,6 +100,16 @@ let messageHandler = (request, sender, sendResponse) => {
     }
 }
 
+let handleStartup = () => {
+    if (tabsStore.length > 0) {
+        chrome.tabs.create({
+            url: '/group-page/group-page.html',
+            active: true
+        }).then(tab => { groupTabId = tab.id }).catch(onError)
+    }   
+}
+
 browser.commands.onCommand.addListener(onCommandHandler)    
 browser.tabs.onUpdated.addListener(onUpdatedHandler)
 browser.runtime.onMessage.addListener(messageHandler);
+browser.runtime.onStartup.addListener(handleStartup)
