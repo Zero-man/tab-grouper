@@ -104,6 +104,7 @@
         targetIcon.className = 'target-icon'
         targetIcon.role = 'presentation'
         targetIcon.src = tab.favIconUrl
+        targetIcon.onerror = function () { targetIcon.src = '../icons/fish-64.png' };
         
         let targetName = document.createElement('div')
         targetName.className = 'target-name'

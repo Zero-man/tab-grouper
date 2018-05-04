@@ -1,6 +1,10 @@
 let tabsStore = []
 let groupTabId
 
+if (localStorage.getItem('tabsStore')) {
+    tabsStore = JSON.parse(localStorage.getItem('tabsStore'))
+}
+
 let executeQuery = () => {
     let query = browser.tabs.query({
         currentWindow: true
@@ -27,6 +31,7 @@ let closeTabs = (tab) => {
     
     browser.tabs.remove(tabIds)
     lastGroup.tabs = uniq(lastGroup.tabs)
+    localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
 
     // Close any group tabs across windows.
     let groupTabs = browser.tabs.query({
@@ -36,6 +41,7 @@ let closeTabs = (tab) => {
 
 let removeTabGroup = (index) => {
     tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1)
+    localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
 }
 
 let restoreTabGroup = (index) => {
@@ -48,8 +54,9 @@ let restoreTabGroup = (index) => {
 }
 
 let removeTabGroupItem = (index, parentIndex) => {
-    let group = tabsStore[parentIndex].tabs;
-    group.length === 1 ? group.pop() : group.splice(index, 1);
+    let group = tabsStore[parentIndex].tabs
+    group.length === 1 ? group.pop() : group.splice(index, 1)
+    localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
 }
 
 let onlyGroupTab = (tabs) => tabs.length === 1 && tabs[0].title === "Grouped Tabs"
@@ -111,5 +118,5 @@ let handleStartup = () => {
 
 browser.commands.onCommand.addListener(onCommandHandler)    
 browser.tabs.onUpdated.addListener(onUpdatedHandler)
-browser.runtime.onMessage.addListener(messageHandler);
+browser.runtime.onMessage.addListener(messageHandler)
 browser.runtime.onStartup.addListener(handleStartup)
