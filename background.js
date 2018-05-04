@@ -1,10 +1,6 @@
 let tabsStore = []
 let groupTabId
 
-if (localStorage.getItem('tabsStore')) {
-    tabsStore = JSON.parse(localStorage.getItem('tabsStore'))
-}
-
 let executeQuery = () => {
     let query = browser.tabs.query({
         currentWindow: true
@@ -108,6 +104,10 @@ let messageHandler = (request, sender, sendResponse) => {
 }
 
 let handleStartup = () => {
+    if (localStorage.getItem('tabsStore')) {
+        tabsStore = JSON.parse(localStorage.getItem('tabsStore'))
+    }
+
     if (tabsStore.length > 0) {
         chrome.tabs.create({
             url: '/group-page/group-page.html',
