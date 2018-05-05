@@ -109,7 +109,7 @@ let handleStartup = () => {
     }
 
     if (tabsStore.length > 0) {
-        chrome.tabs.create({
+        browser.tabs.create({
             url: '/group-page/group-page.html',
             active: true
         }).then(tab => { groupTabId = tab.id }).catch(onError)
