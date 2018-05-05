@@ -11,7 +11,7 @@ let createTab = (data) => {
     if (data.length > 1 && !onlyGroupTab(data)) {
         tabsStore.push({
             tabs: data,
-            lastUpdate: new Date()
+            lastUpdate: new Date().toString()
         })
         browser.tabs.create({
             url: '/group-page/group-page.html',
