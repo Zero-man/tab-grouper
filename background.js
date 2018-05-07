@@ -9,24 +9,27 @@ let executeQuery = () => {
 
 let createTab = (data) => {
     if (data.length > 1 && !onlyGroupTab(data)) {
-        tabsStore.push({
-            tabs: data,
-            lastUpdate: new Date()
-        })
+        let group = {
+            tabs: uniq(data).filter(t => !/about:|moz-extension:\/\//g.test(t.url)),
+            lastUpdate: new Date().toString()
+        }
+
+        if (group.tabs.length > 0) {
+            tabsStore.push(group)
+        }
+
         browser.tabs.create({
             url: '/group-page/group-page.html',
             active: false
-        }).then(closeTabs).catch(onError)
+        }).then(closeTabs.bind(null, data)).catch(onError)
     }
 }
 
-let closeTabs = (tab) => {
+let closeTabs = (data, tab) => {
     groupTabId = tab.id
-    let lastGroup = tabsStore[tabsStore.length-1]
-    let tabIds = lastGroup.tabs.map(tab => tab.id)
+    let tabIds = data.map(t => t.id)
     
     browser.tabs.remove(tabIds)
-    lastGroup.tabs = uniq(lastGroup.tabs)
     localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
 
     // Close any group tabs across windows.
@@ -61,9 +64,7 @@ let onError = (error) => console.log(`Error: ${error}`)
 
 let uniq = (a) => {
     var hashtable = {}
-    return a.filter(function(item) {
-        return hashtable[item.url] ? false : (hashtable[item.url] = true)
-    })
+    return a.filter(item => hashtable[item.url] ? false : (hashtable[item.url] = true))
 }
 
 let onCommandHandler = (command) => {
@@ -74,16 +75,8 @@ let onCommandHandler = (command) => {
 
 let onUpdatedHandler = (tabId, changeInfo, tab) => {
     if (tabId === groupTabId && changeInfo.status === 'complete') {
-        let obj = tabsStore
-
-        for (let item of obj) {
-            item.tabs = item.tabs.filter(t => 
-                !/about:|moz-extension:\/\//g.test(t.url)
-            )
-        }
-
         browser.tabs.sendMessage(tabId, {
-            tabs: obj,
+            tabs: tabsStore,
         })
     }
 }
