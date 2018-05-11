@@ -48,7 +48,7 @@
     function renderDateText (date) {
         let dateElement = document.createElement('p')
         dateElement.style.fontStyle = 'italic' 
-        dateElement.appendChild(document.createTextNode(`Grouped: ${date.toString().replace(/\((.*)/g, '')}`))
+        dateElement.appendChild(document.createTextNode(`Grouped: ${date.replace(/\((.*)/g, '')}`))
         
         return dateElement
     }
