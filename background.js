@@ -1,49 +1,55 @@
 let tabsStore = []
 let groupTabId
 
-let executeQuery = () => {
-    let query = browser.tabs.query({
-        currentWindow: true
-    }).then(createTab).catch(onError)
-}
-
-let createTab = (data) => {
-    if (data.length > 1 && !onlyGroupTab(data)) {
-        let group = {
-            tabs: uniq(data).filter(t => !/about:|moz-extension:\/\//g.test(t.url)),
-            lastUpdate: new Date().toString()
-        }
-
-        if (group.tabs.length > 0) {
-            tabsStore.push(group)
-        }
-
-        browser.tabs.create({
-            url: '/group-page/group-page.html',
-            active: false
-        }).then(closeTabs.bind(null, data)).catch(onError)
+// EXECUTION METHODS
+const executeQuery = async () => {
+    try {
+        const queryResult = await browser.tabs.query({})
+        const newGroup = setNewGroup(queryResult)
+        await createTab(newGroup.tabs)
+        await closeTabs(queryResult.map(t => t.id))
+        
+    } catch(err) {
+        console.log('Error: ', err)
     }
 }
 
-let closeTabs = (data, tab) => {
-    groupTabId = tab.id
-    let tabIds = data.map(t => t.id)
-    
-    browser.tabs.remove(tabIds)
-    localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
+const setNewGroup = (data) => {
+    if (data.length > 1 && !onlyGroupTab(data)) {
+        const newGroup = {
+            tabs: uniq(data),
+            lastUpdate: new Date().toString()
+        }
 
-    // Close any group tabs across windows.
-    let groupTabs = browser.tabs.query({
-        url: 'moz-extension://*/group-page/group-page.html'
-    }).then(tabs => browser.tabs.remove(tabs.map(tab => tab.id)))
+        tabsStore.push(newGroup)
+        localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
+
+        return newGroup
+    }   
+}
+const createTab = async (data) => {
+    if (!onlyGroupTab(data)) {
+        const newTab = await browser.tabs.create({
+            url: '/group-page/group-page.html',
+            active: false
+        })
+
+        groupTabId = newTab.id
+
+        return newTab
+    }
 }
 
-let removeTabGroup = (index) => {
+const closeTabs = async (ids) => {  
+    await browser.tabs.remove(ids)
+}
+
+const removeTabGroup = (index) => {
     tabsStore.length === 1 ? tabsStore.pop() : tabsStore.splice(index, 1)
     localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
 }
 
-let restoreTabGroup = (index) => {
+const restoreTabGroup = (index) => {
     tabsStore[index].tabs.forEach(tab => {
         browser.tabs.create({
             url: tab.url,
@@ -52,28 +58,28 @@ let restoreTabGroup = (index) => {
     })
 }
 
-let removeTabGroupItem = (index, parentIndex) => {
+const removeTabGroupItem = (index, parentIndex) => {
     let group = tabsStore[parentIndex].tabs
     group.length === 1 ? group.pop() : group.splice(index, 1)
     localStorage.setItem('tabsStore', JSON.stringify(tabsStore))
 }
 
-let onlyGroupTab = (tabs) => tabs.length === 1 && tabs[0].title === "Grouped Tabs"
+// HELPERS
+const onlyGroupTab = (tabs) => tabs.length === 1 && tabs[0].title === "Grouped Tabs"
 
-let onError = (error) => console.log(`Error: ${error}`)
-
-let uniq = (a) => {
+const uniq = (a) => {
     var hashtable = {}
     return a.filter(item => hashtable[item.url] ? false : (hashtable[item.url] = true))
 }
 
-let onCommandHandler = (command) => {
+// EVENT HANDLERS
+const onCommandHandler = (command) => {
     if (command === 'group-tabs') {
         executeQuery()
     }
 }
 
-let onUpdatedHandler = (tabId, changeInfo, tab) => {
+const onUpdatedHandler = (tabId, changeInfo, tab) => {
     if (tabId === groupTabId && changeInfo.status === 'complete') {
         browser.tabs.sendMessage(tabId, {
             tabs: tabsStore,
@@ -81,7 +87,7 @@ let onUpdatedHandler = (tabId, changeInfo, tab) => {
     }
 }
 
-let messageHandler = (request, sender, sendResponse) => {
+const messageHandler = (request, sender, sendResponse) => {
     if (request.func === 'executeQuery') {
         executeQuery()
     }
@@ -96,16 +102,18 @@ let messageHandler = (request, sender, sendResponse) => {
     }
 }
 
-let handleStartup = () => {
+const handleStartup = async () => {
     if (localStorage.getItem('tabsStore')) {
         tabsStore = JSON.parse(localStorage.getItem('tabsStore'))
     }
 
     if (tabsStore.length > 0) {
-        browser.tabs.create({
+        const tab = await browser.tabs.create({
             url: '/group-page/group-page.html',
             active: true
-        }).then(tab => { groupTabId = tab.id }).catch(onError)
+        })
+
+        groupTabId = tab.id
     }   
 }
 

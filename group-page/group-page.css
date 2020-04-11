@@ -1,3 +1,7 @@
+body {
+    background: #2A2A2E;
+}
+
 .main-content {
     padding-left: 20px;
 }
@@ -11,7 +15,7 @@
     padding: 8px;
     margin: 8px;
     flex: 1 2 350px;
-    background-color: rgb(255, 255, 255)
+    border: 3px solid #3d7e9a;
 }
 
 .target-list {
@@ -42,7 +46,6 @@
 .close {
     width: 25px;
     height: 25px;
-    opacity: 0.5;
     cursor: pointer;
     text-align: center;
 }
@@ -53,7 +56,6 @@
     padding: 5px 5px 0 0;
     cursor: pointer;
     text-align: center;
-    opacity: 0.4;
 }
 
 .close:hover,

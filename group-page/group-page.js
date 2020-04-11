@@ -67,7 +67,6 @@
 
     function renderRestoreGroupButton (element) {
         let button = document.createElement('a')
-        button.style.fontWeight = '700'
         button.style.cursor = 'pointer'
         button.text = 'Restore'
         button.title = 'Restore tab group'
